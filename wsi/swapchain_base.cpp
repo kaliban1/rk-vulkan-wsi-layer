@@ -74,7 +74,7 @@ namespace wsi
  * presented then the old one is marked as FREE and the free_image
  * semaphore of the swapchain will be posted.
  **/
-__attribute__((noreturn)) void *page_flip_thread(void *ptr)
+void *page_flip_thread(void *ptr)
 {
    auto *sc = static_cast<swapchain_base *>(ptr);
    wsi::swapchain_image *sc_images = sc->m_swapchain_images;
@@ -83,9 +83,19 @@ __attribute__((noreturn)) void *page_flip_thread(void *ptr)
 
    while (true)
    {
+      /* Check if this thread needs to be terminated. */
+      if (!sc->m_page_flip_thread_run)
+      {
+         break;
+      }
       /* Waiting for the page_flip_semaphore which will be signalled once there is an
        * image to display.*/
-      sem_wait(&sc->m_page_flip_semaphore);
+      if ((vk_res = sc->m_page_flip_semaphore.wait(0)) == VK_NOT_READY)
+      {
+         /* Image is not ready yet. */
+         continue;
+      }
+      assert(vk_res == VK_SUCCESS);
 
       /* We want to present the oldest queued for present image from our present queue,
        * which we can find at the sc->pending_buffer_pool.head index. */
@@ -133,6 +143,7 @@ __attribute__((noreturn)) void *page_flip_thread(void *ptr)
          sc->present_image(pending_index);
       }
    }
+   return nullptr;
 }
 
 void swapchain_base::unpresent_image(uint32_t presented_index)
@@ -161,6 +172,7 @@ swapchain_base::swapchain_base(layer::device_private_data &dev_data, const VkAll
    , m_ancestor(VK_NULL_HANDLE)
    , m_device(VK_NULL_HANDLE)
    , m_queue(VK_NULL_HANDLE)
+   , m_page_flip_thread_run(true)
 {
 }
 
@@ -289,7 +301,11 @@ VkResult swapchain_base::init(VkDevice device, const VkSwapchainCreateInfoKHR *s
    }
 
    /* Setup semaphore for signaling pageflip thread */
-   res = sem_init(&m_page_flip_semaphore, 0, 0);
+   result = m_page_flip_semaphore.init(0);
+   if (result != VK_SUCCESS)
+   {
+      return result;
+   }
 
    /* Only programming error can cause this to fail. */
    assert(res == 0);
@@ -309,11 +325,8 @@ VkResult swapchain_base::init(VkDevice device, const VkSwapchainCreateInfoKHR *s
    m_thread_sem_defined = true;
 
    /* Launch page flipping thread */
-   res = pthread_create(&m_page_flip_thread, NULL, page_flip_thread, static_cast<void *>(this));
-   if (res < 0)
-   {
-      return VK_ERROR_OUT_OF_HOST_MEMORY;
-   }
+   m_page_flip_thread = std::thread(page_flip_thread, static_cast<void *>(this));
+
    /* Release the swapchain images of the old swapchain in order
     * to free up memory for new swapchain. This is necessary especially
     * on platform with limited display memory size.
@@ -377,22 +390,16 @@ void swapchain_base::teardown()
 
    if (m_thread_sem_defined)
    {
-      res = pthread_cancel(m_page_flip_thread);
-      if (res != 0)
-      {
-         WSI_PRINT_ERROR("pthread_cancel failed for page_flip_thread %lu with %d\n", m_page_flip_thread, res);
-      }
+      /* Tell flip thread to end. */
+      m_page_flip_thread_run = false;
 
-      res = pthread_join(m_page_flip_thread, NULL);
-      if (res != 0)
+      if (m_page_flip_thread.joinable())
       {
-         WSI_PRINT_ERROR("pthread_join failed for page_flip_thread %lu with %d\n", m_page_flip_thread, res);
+         m_page_flip_thread.join();
       }
-
-      res = sem_destroy(&m_page_flip_semaphore);
-      if (res != 0)
+      else
       {
-         WSI_PRINT_ERROR("sem_destroy failed for page_flip_semaphore with %d\n", errno);
+         WSI_PRINT_ERROR("m_page_flip_thread is not joinable");
       }
 
       res = sem_destroy(&m_start_present_semaphore);
@@ -591,7 +598,7 @@ VkResult swapchain_base::queue_present(VkQueue queue, const VkPresentInfoKHR *pr
       m_pending_buffer_pool.ring[m_pending_buffer_pool.tail] = image_index;
       m_pending_buffer_pool.tail = (m_pending_buffer_pool.tail + 1) % m_pending_buffer_pool.size;
 
-      sem_post(&m_page_flip_semaphore);
+      m_page_flip_semaphore.post();
 
       return VK_ERROR_OUT_OF_DATE_KHR;
    }
@@ -601,8 +608,7 @@ VkResult swapchain_base::queue_present(VkQueue queue, const VkPresentInfoKHR *pr
    m_pending_buffer_pool.ring[m_pending_buffer_pool.tail] = image_index;
    m_pending_buffer_pool.tail = (m_pending_buffer_pool.tail + 1) % m_pending_buffer_pool.size;
 
-   sem_post(&m_page_flip_semaphore);
-
+   m_page_flip_semaphore.post();
    return VK_SUCCESS;
 }
 

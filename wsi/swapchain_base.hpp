@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <vulkan/vulkan.h>
+#include <thread>
 
 #include <layer/private_data.hpp>
 #include <util/timed_semaphore.hpp>
@@ -143,7 +144,12 @@ protected:
    /**
     * @brief Handle to the page flip thread.
     */
-   pthread_t m_page_flip_thread;
+   std::thread m_page_flip_thread;
+
+   /**
+    * @brief Whether the page flip thread has to continue running or terminate.
+    */
+   bool m_page_flip_thread_run;
 
    /**
     * @brief In case we encounter threading or drm errors we need a way to
@@ -164,9 +170,9 @@ protected:
       uint32_t size;
    };
    /**
-    * @brief A semaphore to be signalled once a page flip even occurs.
+    * @brief A semaphore to be signalled once a page flip event occurs.
     */
-   sem_t m_page_flip_semaphore;
+   util::timed_semaphore m_page_flip_semaphore;
 
    /**
     * @brief A semaphore to be signalled once the swapchain has one frame on screen.
