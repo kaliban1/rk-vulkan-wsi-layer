@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, 2021-2023 Arm Limited.
+ * Copyright (c) 2017-2019, 2021-2024 Arm Limited.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -38,8 +38,6 @@
 #include "surface_properties.hpp"
 #include "surface.hpp"
 #include "util/macros.hpp"
-
-#define UNUSED(x) ((void)(x))
 
 namespace wsi
 {
