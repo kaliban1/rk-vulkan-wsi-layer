@@ -222,6 +222,8 @@ static constexpr uint32_t API_VERSION_MAX = UINT32_MAX;
    EP(CreateHeadlessSurfaceEXT, VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME, API_VERSION_MAX, false)                      \
    /* VK_KHR_wayland_surface */                                                                                      \
    EP(CreateWaylandSurfaceKHR, VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME, API_VERSION_MAX, false)                        \
+   /* VK_KHR_display */                                                                                              \
+   EP(CreateDisplayPlaneSurfaceKHR, VK_KHR_DISPLAY_EXTENSION_NAME, API_VERSION_MAX, false)                           \
    /* VK_KHR_get_surface_capabilities2 */                                                                            \
    EP(GetPhysicalDeviceSurfaceCapabilities2KHR, VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME, API_VERSION_MAX,   \
       false)                                                                                                         \
