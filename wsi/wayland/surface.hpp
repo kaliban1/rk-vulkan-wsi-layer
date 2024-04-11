@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Arm Limited.
+ * Copyright (c) 2021, 2024 Arm Limited.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -40,12 +40,6 @@ namespace wsi
 namespace wayland
 {
 
-struct drm_format_pair
-{
-   uint32_t fourcc;
-   uint64_t modifier;
-};
-
 /**
  * Wayland callback for global wl_registry events to handle global objects required by @ref wsi::wayland::surface
  */
@@ -60,7 +54,7 @@ public:
    struct init_parameters;
 
    /** Constructor to allow for custom allocation, but require privately defined arguments. */
-   surface(const init_parameters&);
+   surface(const init_parameters &);
 
    /**
     * @brief Allocates and initializes a surface
@@ -109,7 +103,7 @@ public:
     *
     * The raw pointer is valid for the lifetime of the surface.
     */
-   zwp_linux_surface_synchronization_v1* get_surface_sync_interface()
+   zwp_linux_surface_synchronization_v1 *get_surface_sync_interface()
    {
       return surface_sync_interface.get();
    }
@@ -166,7 +160,7 @@ private:
 
    /** Container for the zwp_linux_explicit_synchronization_v1 interface binding */
    wayland_owner<zwp_linux_explicit_synchronization_v1> explicit_sync_interface;
-   /** Container for the surface specific zwp_linux_surface_synchronization_v1 interface. */
+   /** Container for the surface specific zwp_linux_surface_synchronization_v1 interface. */;
    wayland_owner<zwp_linux_surface_synchronization_v1> surface_sync_interface;
 
    /**
