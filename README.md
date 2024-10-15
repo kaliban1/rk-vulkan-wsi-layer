@@ -126,6 +126,20 @@ provides a generic ion implementation that may work in systems that support
 linear formats. This is selected by the `-DSELECT_EXTERNAL_ALLOCATOR=ion`
 option, as shown above.
 
+### Wayland support with FIFO presentation mode
+
+The WSI Layer has 2 FIFO implementations for the Wayland backend. One that
+blocks in vkQueuePresent and one that uses a presentation thread. This is due
+to the fact that the FIFO implementation that utilises the presentation thread
+in the Wayland backend is not strictly conformant to the Vulkan specification,
+however it has a much better performance due to not needing to block in vkQueuePresent.
+
+By default, the WSI Layer uses the queue present blocking FIFO implementation
+when using Wayland swapchains. This can be switched to instead use the presentation
+thread implementation by including the build option `ENABLE_WAYLAND_FIFO_PRESENTATION_THREAD`,
+along with the other build options mentioned in "Building with Wayland support"
+section.
+
 ### Building with frame instrumentation support
 
 The layer can be built to pass frame boundary information down to other
