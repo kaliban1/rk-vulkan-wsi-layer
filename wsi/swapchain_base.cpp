@@ -243,6 +243,7 @@ static VkResult handle_scaling_create_info(VkDevice device, const VkSwapchainCre
 
       VkSurfacePresentScalingCapabilitiesEXT scaling_capabilities = {};
       wsi::surface_properties *props = wsi::get_surface_properties(instance, surface);
+      assert(props != nullptr);
       props->get_surface_present_scaling_and_gravity(&scaling_capabilities);
 
       if (((present_scaling_create_info->scalingBehavior != 0) &&
@@ -272,6 +273,7 @@ VkResult swapchain_base::handle_swapchain_present_modes_create_info(
       layer::device_private_data &device_data = layer::device_private_data::get(device);
       auto &instance = device_data.instance_data;
       wsi::surface_properties *props = wsi::get_surface_properties(instance, m_surface);
+      assert(props != nullptr);
       for (uint32_t i = 0; i < swapchain_present_modes_create_info->presentModeCount; i++)
       {
          assert(
