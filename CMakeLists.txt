@@ -67,6 +67,7 @@ set(EXTERNAL_WSIALLOC_LIBRARY "" CACHE STRING "External implementation of the ws
 option(BUILD_WSI_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN "Build with support for VK_EXT_image_compression_control_swapchain" OFF)
 option(BUILD_WSI_DISPLAY_SUPPORT_FORMAT_MODIFIERS "Build with support for format modifiers in VK_KHR_display" ON)
 option(VULKAN_WSI_LAYER_EXPERIMENTAL "Enable the Vulkan WSI Experimental features" OFF)
+option(ENABLE_WAYLAND_FIFO_PRESENTATION_THREAD "Enable the non-conformant FIFO presentation thread implementation in the Wayland backend" OFF)
 
 # Enables the layer to pass frame boundary events if the ICD or layers below have support for it by
 # making use of the VK_EXT_frame_boundary extension. If the application itself makes use of the
@@ -182,6 +183,11 @@ if(BUILD_WSI_WAYLAND)
    endif()
    target_link_libraries(wayland_wsi drm_utils ${WAYLAND_CLIENT_LDFLAGS})
    list(APPEND LINK_WSI_LIBS wayland_wsi)
+   if(ENABLE_WAYLAND_FIFO_PRESENTATION_THREAD)
+      target_compile_definitions(wayland_wsi PRIVATE "-DWAYLAND_FIFO_PRESENTATION_THREAD_ENABLED=1")
+   else()
+      target_compile_definitions(wayland_wsi PRIVATE "-DWAYLAND_FIFO_PRESENTATION_THREAD_ENABLED=0")
+   endif()
 else()
    list(APPEND JSON_COMMANDS COMMAND sed -i '/VK_KHR_wayland_surface/d' ${CMAKE_CURRENT_BINARY_DIR}/VkLayer_window_system_integration.json)
 endif()
