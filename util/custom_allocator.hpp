@@ -28,6 +28,7 @@
 #include <string>
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 
 #include <vulkan/vulkan.h>
 
@@ -383,11 +384,11 @@ public:
          base::reserve(size);
          return true;
       }
-      catch (std::bad_alloc &e)
+      catch (const std::bad_alloc &)
       {
          return false;
       }
-      catch (const std::length_error &e)
+      catch (const std::length_error &)
       {
          return false;
       }
