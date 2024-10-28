@@ -89,7 +89,7 @@ make -C build
 
 In order to build with Wayland support the `BUILD_WSI_WAYLAND` build option
 must be used, the `SELECT_EXTERNAL_ALLOCATOR` option has to be set to
-a graphics memory allocator (currently only ion is supported) and
+a graphics memory allocator (currently only ion and dma_buf_heaps are supported) and
 the `KERNEL_DIR` option must be defined as the root of the Linux kernel
 source.
 
@@ -122,9 +122,9 @@ also responsible for selecting a suitable format that can be
 efficiently shared between the different devices in the system, e.g. GPU,
 display. It is therefore an important point of integration. It is expected
 that each system will need a tailored implementation, although the layer
-provides a generic ion implementation that may work in systems that support
-linear formats. This is selected by the `-DSELECT_EXTERNAL_ALLOCATOR=ion`
-option, as shown above.
+provides a generic ion and dma_buf_heaps implementations that may work in
+systems that support linear formats. This is selected by
+the `-DSELECT_EXTERNAL_ALLOCATOR=ion` option, as shown above.
 
 ### Wayland support with FIFO presentation mode
 
