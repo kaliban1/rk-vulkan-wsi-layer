@@ -101,7 +101,7 @@ if(NOT SELECT_EXTERNAL_ALLOCATOR STREQUAL "none" AND EXTERNAL_WSIALLOC_LIBRARY S
    set_target_properties(wsialloc PROPERTIES C_STANDARD 99)
 
    if(SELECT_EXTERNAL_ALLOCATOR STREQUAL "ion")
-      target_sources(wsialloc PRIVATE util/wsialloc/wsialloc_ion.c)
+      target_sources(wsialloc PRIVATE util/wsialloc/wsialloc_ion.c util/wsialloc/wsialloc_helpers.c)
       target_link_libraries(wsialloc drm_utils)
       if(DEFINED KERNEL_DIR)
          target_include_directories(wsialloc PRIVATE "${KERNEL_DIR}/drivers/staging/android/uapi")
