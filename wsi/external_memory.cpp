@@ -55,7 +55,7 @@ external_memory::~external_memory()
       else if (m_buffer_fds[plane] >= 0)
       {
          auto it = std::find(std::begin(m_buffer_fds), std::end(m_buffer_fds), m_buffer_fds[plane]);
-         if (std::distance(std::begin(m_buffer_fds), it) == plane)
+         if (std::distance(std::begin(m_buffer_fds), it) == static_cast<int>(plane))
          {
             close(m_buffer_fds[plane]);
          }
@@ -108,7 +108,7 @@ VkResult external_memory::import_plane_memories()
       for (uint32_t plane = 0; plane < get_num_planes(); plane++)
       {
          auto it = std::find(std::begin(m_buffer_fds), std::end(m_buffer_fds), m_buffer_fds[plane]);
-         if (std::distance(std::begin(m_buffer_fds), it) == plane)
+         if (std::distance(std::begin(m_buffer_fds), it) == static_cast<int>(plane))
          {
             TRY_LOG_CALL(import_plane_memory(m_buffer_fds[plane], &m_memories[memory_plane]));
             memory_plane++;
