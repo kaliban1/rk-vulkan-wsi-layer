@@ -89,8 +89,8 @@ make -C build
 
 In order to build with Wayland support the `BUILD_WSI_WAYLAND` build option
 must be used, the `SELECT_EXTERNAL_ALLOCATOR` option has to be set to
-a graphics memory allocator (currently only ion is supported) and
-the `KERNEL_DIR` option must be defined as the root of the Linux kernel
+a graphics memory allocator (currently only ion and dma_buf_heaps are supported) and
+the `KERNEL_HEADER_DIR` option must be defined as the directory that includes the kernel headers.
 source.
 
 ```
@@ -98,7 +98,7 @@ cmake . -DVULKAN_CXX_INCLUDE="path/to/vulkan-header" \
         -DBUILD_WSI_HEADLESS=0 \
         -DBUILD_WSI_WAYLAND=1 \
         -DSELECT_EXTERNAL_ALLOCATOR=ion \
-        -DKERNEL_DIR="path/to/linux-kernel-source"
+        -DKERNEL_HEADER_DIR="path/to/linux-kernel-headers"
 ```
 
 In the command line above, `-DBUILD_WSI_HEADLESS=0` is used to disable support
@@ -111,7 +111,7 @@ using the `EXTERNAL_WSIALLOC_LIBRARY` option. For example,
 cmake . -DVULKAN_CXX_INCLUDE="path/to/vulkan-header" \
         -DBUILD_WSI_WAYLAND=1 \
         -DEXTERNAL_WSIALLOC_LIBRARY="path/to/custom/libwsialloc" \
-        -DKERNEL_DIR="path/to/linux-kernel-source"
+        -DKERNEL_HEADER_DIR="path/to/linux-kernel-headers"
 ```
 
 The `EXTERNAL_WSIALLOC_LIBRARY` option allows to specify the path to a library
@@ -122,9 +122,9 @@ also responsible for selecting a suitable format that can be
 efficiently shared between the different devices in the system, e.g. GPU,
 display. It is therefore an important point of integration. It is expected
 that each system will need a tailored implementation, although the layer
-provides a generic ion implementation that may work in systems that support
-linear formats. This is selected by the `-DSELECT_EXTERNAL_ALLOCATOR=ion`
-option, as shown above.
+provides a generic ion and dma_buf_heaps implementations that may work in
+systems that support linear formats. This is selected by
+the `-DSELECT_EXTERNAL_ALLOCATOR=ion` option, as shown above.
 
 ### Wayland support with FIFO presentation mode
 
