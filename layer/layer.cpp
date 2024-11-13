@@ -244,17 +244,12 @@ VKAPI_ATTR VkResult create_device(VkPhysicalDevice physicalDevice, const VkDevic
    auto &inst_data = instance_private_data::get(physicalDevice);
    util::allocator allocator{ inst_data.get_allocator(), VK_SYSTEM_ALLOCATION_SCOPE_COMMAND, pAllocator };
    util::vector<const char *> modified_enabled_extensions{ allocator };
-
-   util::extension_list application_requested_extensions{ allocator };
-   TRY_LOG_CALL(
-      application_requested_extensions.add(pCreateInfo->ppEnabledExtensionNames, pCreateInfo->enabledExtensionCount));
-
    util::extension_list enabled_extensions{ allocator };
+
    const util::wsi_platform_set &enabled_platforms = inst_data.get_enabled_platforms();
    if (!enabled_platforms.empty())
    {
-      TRY_LOG_CALL(enabled_extensions.add(application_requested_extensions));
-
+      TRY_LOG_CALL(enabled_extensions.add(pCreateInfo->ppEnabledExtensionNames, pCreateInfo->enabledExtensionCount));
       TRY_LOG_CALL(wsi::add_device_extensions_required_by_layer(physicalDevice, enabled_platforms, enabled_extensions));
       TRY_LOG_CALL(enabled_extensions.get_extension_strings(modified_enabled_extensions));
 
@@ -265,21 +260,39 @@ VKAPI_ATTR VkResult create_device(VkPhysicalDevice physicalDevice, const VkDevic
    bool should_layer_handle_frame_boundary_events = false;
    VkPhysicalDeviceFrameBoundaryFeaturesEXT frame_boundary;
 
-   /* Check if we should handle frame boundary feature ourselves. The conditions for handling this ourselves is:
-    * 1 - Application did not ask to enable VK_EXT_frame_boundary extension
-    * 2 - The layer has been built with instrumentation enabled
-    * 3 - The underlying layers/ICD can support the VK_EXT_frame_boundary extension */
-   if (!application_requested_extensions.contains(VK_EXT_FRAME_BOUNDARY_EXTENSION_NAME) && ENABLE_INSTRUMENTATION)
+   if (ENABLE_INSTRUMENTATION)
    {
       if (enabled_extensions.contains(VK_EXT_FRAME_BOUNDARY_EXTENSION_NAME))
       {
          if (inst_data.has_frame_boundary_support(physicalDevice))
          {
-            frame_boundary.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAME_BOUNDARY_FEATURES_EXT;
-            frame_boundary.pNext = const_cast<void *>(modified_info.pNext);
-            frame_boundary.frameBoundary = VK_TRUE;
+            const auto *application_frame_boundary_features =
+               util::find_extension<VkPhysicalDeviceFrameBoundaryFeaturesEXT>(
+                  VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAME_BOUNDARY_FEATURES_EXT, pCreateInfo->pNext);
 
-            modified_info.pNext = &frame_boundary;
+            if (application_frame_boundary_features)
+            {
+               if (application_frame_boundary_features->frameBoundary == VK_FALSE)
+               {
+                  /* The original features cannot be modified as they are marked as constant.
+                   * Additionally, it is not possible to unlink this extension from the pNext
+                   * chain as all other passed structures are also marked as const. We'll take
+                   * the risk to modify the original structure as there is no trivial way to
+                   * re-enable frame boundary feature or swap out the original structure. */
+                  auto *frame_boundary_features_non_const =
+                     const_cast<VkPhysicalDeviceFrameBoundaryFeaturesEXT *>(application_frame_boundary_features);
+                  frame_boundary_features_non_const->frameBoundary = VK_TRUE;
+               }
+            }
+            else
+            {
+               frame_boundary.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAME_BOUNDARY_FEATURES_EXT;
+               frame_boundary.pNext = const_cast<void *>(modified_info.pNext);
+               frame_boundary.frameBoundary = VK_TRUE;
+
+               modified_info.pNext = &frame_boundary;
+            }
+
             should_layer_handle_frame_boundary_events = true;
          }
       }
