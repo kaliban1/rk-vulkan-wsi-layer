@@ -40,10 +40,24 @@ frame_boundary_handler::frame_boundary_handler(const layer::device_private_data 
 std::optional<VkFrameBoundaryEXT> frame_boundary_handler::handle_frame_boundary_event(
    const VkPresentInfoKHR *present_info, VkImage *current_image_to_be_presented)
 {
-   /* If frame boundary feature is not enabled by the application, the layer will pass its own frame boundary events back to ICD.
-    * Otherwise, let the application handle the frame boundary events. */
-   return m_handle_frame_boundary_events ? create_frame_boundary(current_image_to_be_presented) :
-                                           wsi::create_frame_boundary(*present_info);
+   /* If frame boundary feature is not enabled by the application, the layer will
+    * pass its own frame boundary events back to ICD. Otherwise, let the application
+    * handle the frame boundary events. */
+
+   /* First, check if the application passed any frame boundary events and if that's
+    * the case, just forward it at queue submission. */
+   auto application_frame_boundary_event = wsi::create_frame_boundary(*present_info);
+   if (application_frame_boundary_event.has_value())
+   {
+      return application_frame_boundary_event;
+   }
+
+   if (m_handle_frame_boundary_events)
+   {
+      return create_frame_boundary(current_image_to_be_presented);
+   }
+
+   return std::nullopt;
 }
 
 std::optional<VkFrameBoundaryEXT> create_frame_boundary(const VkPresentInfoKHR &present_info)
