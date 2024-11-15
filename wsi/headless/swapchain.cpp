@@ -34,6 +34,8 @@
 #include <util/timed_semaphore.hpp>
 
 #include "swapchain.hpp"
+#include "layer/wsi_layer_experimental.hpp"
+#include "util/custom_allocator.hpp"
 
 namespace wsi
 {
@@ -72,6 +74,27 @@ VkResult swapchain::init_platform(VkDevice device, const VkSwapchainCreateInfoKH
    {
       use_presentation_thread = true;
    }
+#if VULKAN_WSI_LAYER_EXPERIMENTAL
+   std::array<util::unique_ptr<wsi::vulkan_time_domain>, 4> time_domains_array = {
+      m_allocator.make_unique<wsi::vulkan_time_domain>(VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT,
+                                                       VK_TIME_DOMAIN_DEVICE_KHR),
+      m_allocator.make_unique<wsi::vulkan_time_domain>(VK_PRESENT_STAGE_IMAGE_LATCHED_BIT_EXT,
+                                                       VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR),
+      m_allocator.make_unique<wsi::vulkan_time_domain>(VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_OUT_BIT_EXT,
+                                                       VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR),
+      m_allocator.make_unique<wsi::vulkan_time_domain>(VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT,
+                                                       VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR)
+   };
+
+   for (auto &time_domain : time_domains_array)
+   {
+      if (!m_time_domains.m_time_domains.try_push_back(std::move(time_domain)))
+      {
+         WSI_LOG_ERROR("Failed to add a time domain to m_time_domains.");
+         return VK_ERROR_OUT_OF_HOST_MEMORY;
+      }
+   }
+#endif
 
    return VK_SUCCESS;
 }

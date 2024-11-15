@@ -33,9 +33,9 @@
 #include "util/macros.hpp"
 
 #if VULKAN_WSI_LAYER_EXPERIMENTAL
-#define VK_KHR_present_timing 1
-#define VK_KHR_PRESENT_TIMING_SPEC_VERSION 1
-#define VK_KHR_PRESENT_TIMING_EXTENSION_NAME "VK_KHR_present_timing"
+#define VK_EXT_present_timing 1
+#define VK_EXT_PRESENT_TIMING_SPEC_VERSION 1
+#define VK_EXT_PRESENT_TIMING_EXTENSION_NAME "VK_KHR_present_timing"
 
 #define VK_ERROR_PRESENT_TIMING_QUEUE_FULL_EXT ((VkResult)(-1000208000))
 #define VK_TIME_DOMAIN_PRESENT_STAGE_LOCAL_EXT ((VkTimeDomainEXT)(1000208000))
@@ -167,6 +167,10 @@ typedef struct VkPresentTimingsInfoEXT
    uint32_t swapchainCount;
    const VkPresentTimingInfoEXT *pTimingInfos;
 } VkPresentTimingsInfoEXT;
+
+typedef VkResult(VKAPI_PTR *PFN_vkGetSwapchainTimeDomainPropertiesEXT)(
+   VkDevice device, VkSwapchainKHR swapchain, uint64_t *pTimeDomainsCounter,
+   VkSwapchainTimeDomainPropertiesEXT *pSwapchainTimeDomainProperties);
 
 VWL_VKAPI_CALL(VkResult)
 wsi_layer_vkSetSwapchainPresentTimingQueueSizeEXT(VkDevice device, VkSwapchainKHR swapchain,

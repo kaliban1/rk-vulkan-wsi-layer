@@ -64,8 +64,15 @@ wsi_layer_vkGetSwapchainTimeDomainPropertiesEXT(
    VkDevice device, VkSwapchainKHR swapchain, uint64_t *pTimeDomainsCounter,
    VkSwapchainTimeDomainPropertiesEXT *pSwapchainTimeDomainProperties) VWL_API_POST
 {
-   VkResult result = VK_SUCCESS;
-   return result;
+   auto &device_data = layer::device_private_data::get(device);
+
+   if (!device_data.layer_owns_swapchain(swapchain))
+   {
+      return device_data.disp.GetSwapchainTimeDomainPropertiesEXT(device, swapchain, pTimeDomainsCounter,
+                                                                  pSwapchainTimeDomainProperties);
+   }
+   auto *sc = reinterpret_cast<wsi::swapchain_base *>(swapchain);
+   return sc->set_swapchain_time_domain_properties(pSwapchainTimeDomainProperties, pTimeDomainsCounter);
 }
 
 /**

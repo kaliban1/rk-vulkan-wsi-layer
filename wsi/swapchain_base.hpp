@@ -44,6 +44,8 @@
 #include "wsi/synchronization.hpp"
 #include "wsi/frame_boundary.hpp"
 #include "util/helpers.hpp"
+#include "time_domains.hpp"
+#include "layer/wsi_layer_experimental.hpp"
 
 namespace wsi
 {
@@ -304,7 +306,18 @@ public:
     * @return VK_SUCCESS on success, VK_ERROR_OUT_OF_HOST_MEMORY when there is not enough memory, VK_NOT_READY otherwise.
     * .
     */
+
    VkResult presentation_timing_queue_set_size(size_t queue_size);
+   /**
+    * @brief Set swapchain time domain properties.
+    *
+    * @param pSwapchainTimeDomainProperties time domain struct to be set
+    * @param pTimeDomainsCounter size of the pSwapchainTimeDomainProperties
+    *
+    * @return Returns VK_SUCCESS on success, otherwise an appropriate error code.
+    */
+   VkResult set_swapchain_time_domain_properties(VkSwapchainTimeDomainPropertiesEXT *pSwapchainTimeDomainProperties,
+                                                 uint64_t *pTimeDomainsCounter);
 #endif
 
 protected:
@@ -425,6 +438,13 @@ protected:
     * @brief Image creation info used for all swapchain images.
     */
    VkImageCreateInfo m_image_create_info;
+
+#if VULKAN_WSI_LAYER_EXPERIMENTAL
+   /**
+    *  @brief Handle the backend specific time domains for each present stage.
+    */
+   swapchain_time_domains m_time_domains;
+#endif
 
    /**
     * @brief Return the VkAllocationCallbacks passed in this object constructor.

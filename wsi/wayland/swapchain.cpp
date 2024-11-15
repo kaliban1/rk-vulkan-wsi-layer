@@ -27,6 +27,7 @@
 #include "swapchain.hpp"
 #include "wl_helpers.hpp"
 #include "surface_properties.hpp"
+#include "layer/wsi_layer_experimental.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -80,6 +81,22 @@ swapchain::~swapchain()
 VkResult swapchain::init_platform(VkDevice device, const VkSwapchainCreateInfoKHR *swapchain_create_info,
                                   bool &use_presentation_thread)
 {
+#if VULKAN_WSI_LAYER_EXPERIMENTAL
+   std::array<util::unique_ptr<wsi::vulkan_time_domain>, 1> time_domains_array = {
+      m_allocator.make_unique<wsi::vulkan_time_domain>(VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT,
+                                                       VK_TIME_DOMAIN_DEVICE_KHR),
+   };
+
+   for (auto &time_domain : time_domains_array)
+   {
+      if (!m_time_domains.m_time_domains.try_push_back(std::move(time_domain)))
+      {
+         WSI_LOG_ERROR("Failed to add a time domain to m_time_domains.");
+         return VK_ERROR_OUT_OF_HOST_MEMORY;
+      }
+   }
+#endif
+
    if ((m_display == nullptr) || (m_surface == nullptr) || (m_wsi_surface->get_dmabuf_interface() == nullptr))
    {
       return VK_ERROR_INITIALIZATION_FAILED;
