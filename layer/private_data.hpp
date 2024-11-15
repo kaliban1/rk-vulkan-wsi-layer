@@ -41,7 +41,7 @@
 #include <mutex>
 #include <limits>
 #include <cstring>
-
+#include "wsi_layer_experimental.hpp"
 using scoped_mutex = std::lock_guard<std::mutex>;
 
 /** Forward declare stored objects */
@@ -339,72 +339,69 @@ private:
  * api_version: Vulkan API version where the entrypoint is part of the core specification, or API_VERSION_MAX.
  * required: Boolean to indicate whether the entrypoint is required by the WSI layer or optional.
  */
-#define DEVICE_ENTRYPOINTS_LIST(EP)                                                                                    \
-   /* Vulkan 1.0 */                                                                                                    \
-   EP(GetDeviceProcAddr, "", VK_API_VERSION_1_0, true)                                                                 \
-   EP(GetDeviceQueue, "", VK_API_VERSION_1_0, true)                                                                    \
-   EP(QueueSubmit, "", VK_API_VERSION_1_0, true)                                                                       \
-   EP(QueueWaitIdle, "", VK_API_VERSION_1_0, true)                                                                     \
-   EP(CreateCommandPool, "", VK_API_VERSION_1_0, true)                                                                 \
-   EP(DestroyCommandPool, "", VK_API_VERSION_1_0, true)                                                                \
-   EP(AllocateCommandBuffers, "", VK_API_VERSION_1_0, true)                                                            \
-   EP(FreeCommandBuffers, "", VK_API_VERSION_1_0, true)                                                                \
-   EP(ResetCommandBuffer, "", VK_API_VERSION_1_0, true)                                                                \
-   EP(BeginCommandBuffer, "", VK_API_VERSION_1_0, true)                                                                \
-   EP(EndCommandBuffer, "", VK_API_VERSION_1_0, true)                                                                  \
-   EP(CreateImage, "", VK_API_VERSION_1_0, true)                                                                       \
-   EP(DestroyImage, "", VK_API_VERSION_1_0, true)                                                                      \
-   EP(GetImageMemoryRequirements, "", VK_API_VERSION_1_0, true)                                                        \
-   EP(BindImageMemory, "", VK_API_VERSION_1_0, true)                                                                   \
-   EP(AllocateMemory, "", VK_API_VERSION_1_0, true)                                                                    \
-   EP(FreeMemory, "", VK_API_VERSION_1_0, true)                                                                        \
-   EP(CreateFence, "", VK_API_VERSION_1_0, true)                                                                       \
-   EP(DestroyFence, "", VK_API_VERSION_1_0, true)                                                                      \
-   EP(CreateSemaphore, "", VK_API_VERSION_1_0, true)                                                                   \
-   EP(DestroySemaphore, "", VK_API_VERSION_1_0, true)                                                                  \
-   EP(ResetFences, "", VK_API_VERSION_1_0, true)                                                                       \
-   EP(WaitForFences, "", VK_API_VERSION_1_0, true)                                                                     \
-   EP(DestroyDevice, "", VK_API_VERSION_1_0, true)                                                                     \
-   /* VK_KHR_swapchain */                                                                                              \
-   EP(CreateSwapchainKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                     \
-   EP(DestroySwapchainKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                    \
-   EP(GetSwapchainImagesKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                  \
-   EP(AcquireNextImageKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                    \
-   EP(QueuePresentKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                        \
-   /* VK_KHR_shared_presentable_image */                                                                               \
-   EP(GetSwapchainStatusKHR, VK_KHR_SHARED_PRESENTABLE_IMAGE_EXTENSION_NAME, API_VERSION_MAX, false)                   \
-   /* VK_KHR_device_group + VK_KHR_swapchain or */                                                                     \
-   /* 1.1 with VK_KHR_swapchain */                                                                                     \
-   EP(AcquireNextImage2KHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1, false)                             \
-   /* VK_KHR_device_group + VK_KHR_surface or */                                                                       \
-   /* 1.1 with VK_KHR_swapchain */                                                                                     \
-   EP(GetDeviceGroupSurfacePresentModesKHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1, false)             \
-   EP(GetDeviceGroupPresentCapabilitiesKHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1, false)             \
-   /* VK_KHR_external_memory_fd */                                                                                     \
-   EP(GetMemoryFdKHR, VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, API_VERSION_MAX, false)                                \
-   EP(GetMemoryFdPropertiesKHR, VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, API_VERSION_MAX, false)                      \
-   /* VK_KHR_bind_memory2 or */                                                                                        \
-   /* 1.1 (without KHR suffix) */                                                                                      \
-   EP(BindImageMemory2KHR, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)                             \
-   EP(BindBufferMemory2KHR, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)                            \
-   /* VK_KHR_external_fence_fd */                                                                                      \
-   EP(GetFenceFdKHR, VK_KHR_EXTERNAL_FENCE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                                  \
-   EP(ImportFenceFdKHR, VK_KHR_EXTERNAL_FENCE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                               \
-   /* VK_KHR_external_semaphore_fd */                                                                                  \
-   EP(ImportSemaphoreFdKHR, VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                       \
-   EP(GetSemaphoreFdKHR, VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                          \
-   /* VK_KHR_image_drm_format_modifier */                                                                              \
-   EP(GetImageDrmFormatModifierPropertiesEXT, VK_EXT_IMAGE_DRM_FORMAT_MODIFIER_EXTENSION_NAME, API_VERSION_MAX, false) \
-   /* VK_KHR_sampler_ycbcr_conversion */                                                                               \
-   EP(CreateSamplerYcbcrConversionKHR, VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_API_VERSION_1_1, false)      \
-   EP(DestroySamplerYcbcrConversionKHR, VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_API_VERSION_1_1, false)     \
-   /* VK_KHR_maintenance1 */                                                                                           \
-   EP(TrimCommandPoolKHR, VK_KHR_MAINTENANCE1_EXTENSION_NAME, VK_API_VERSION_1_1, false)                               \
-   /* VK_KHR_get_memory_requirements2 */                                                                               \
-   EP(GetImageMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)      \
-   EP(GetBufferMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)     \
-   EP(GetImageSparseMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1,       \
-      false)                                                                                                           \
+#define DEVICE_ENTRYPOINTS_LIST(EP)                                                                                \
+   /* Vulkan 1.0 */                                                                                                \
+   EP(GetDeviceProcAddr, "", VK_API_VERSION_1_0, true)                                                             \
+   EP(GetDeviceQueue, "", VK_API_VERSION_1_0, true)                                                                \
+   EP(QueueSubmit, "", VK_API_VERSION_1_0, true)                                                                   \
+   EP(QueueWaitIdle, "", VK_API_VERSION_1_0, true)                                                                 \
+   EP(CreateCommandPool, "", VK_API_VERSION_1_0, true)                                                             \
+   EP(DestroyCommandPool, "", VK_API_VERSION_1_0, true)                                                            \
+   EP(AllocateCommandBuffers, "", VK_API_VERSION_1_0, true)                                                        \
+   EP(FreeCommandBuffers, "", VK_API_VERSION_1_0, true)                                                            \
+   EP(ResetCommandBuffer, "", VK_API_VERSION_1_0, true)                                                            \
+   EP(BeginCommandBuffer, "", VK_API_VERSION_1_0, true)                                                            \
+   EP(EndCommandBuffer, "", VK_API_VERSION_1_0, true)                                                              \
+   EP(CreateImage, "", VK_API_VERSION_1_0, true)                                                                   \
+   EP(DestroyImage, "", VK_API_VERSION_1_0, true)                                                                  \
+   EP(GetImageMemoryRequirements, "", VK_API_VERSION_1_0, true)                                                    \
+   EP(BindImageMemory, "", VK_API_VERSION_1_0, true)                                                               \
+   EP(AllocateMemory, "", VK_API_VERSION_1_0, true)                                                                \
+   EP(FreeMemory, "", VK_API_VERSION_1_0, true)                                                                    \
+   EP(CreateFence, "", VK_API_VERSION_1_0, true)                                                                   \
+   EP(DestroyFence, "", VK_API_VERSION_1_0, true)                                                                  \
+   EP(CreateSemaphore, "", VK_API_VERSION_1_0, true)                                                               \
+   EP(DestroySemaphore, "", VK_API_VERSION_1_0, true)                                                              \
+   EP(ResetFences, "", VK_API_VERSION_1_0, true)                                                                   \
+   EP(WaitForFences, "", VK_API_VERSION_1_0, true)                                                                 \
+   EP(DestroyDevice, "", VK_API_VERSION_1_0, true)                                                                 \
+   /* VK_KHR_swapchain */                                                                                          \
+   EP(CreateSwapchainKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                 \
+   EP(DestroySwapchainKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                \
+   EP(GetSwapchainImagesKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                              \
+   EP(AcquireNextImageKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                \
+   EP(QueuePresentKHR, VK_KHR_SWAPCHAIN_EXTENSION_NAME, API_VERSION_MAX, false)                                    \
+   /* VK_KHR_shared_presentable_image */                                                                           \
+   EP(GetSwapchainStatusKHR, VK_KHR_SHARED_PRESENTABLE_IMAGE_EXTENSION_NAME, API_VERSION_MAX, false)               \
+   /* VK_KHR_device_group + VK_KHR_swapchain or */ /* 1.1 with VK_KHR_swapchain */                                 \
+   EP(AcquireNextImage2KHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1, false)                         \
+   /* VK_KHR_device_group + VK_KHR_surface or */ /* 1.1 with VK_KHR_swapchain */                                   \
+   EP(GetDeviceGroupSurfacePresentModesKHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1, false)         \
+   EP(GetDeviceGroupPresentCapabilitiesKHR, VK_KHR_DEVICE_GROUP_EXTENSION_NAME, VK_API_VERSION_1_1,                \
+      false) /* VK_KHR_external_memory_fd */                                                                       \
+   EP(GetMemoryFdKHR, VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, API_VERSION_MAX, false)                            \
+   EP(GetMemoryFdPropertiesKHR, VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, API_VERSION_MAX, false)                  \
+   /* VK_KHR_bind_memory2 or */ /* 1.1 (without KHR suffix) */                                                     \
+   EP(BindImageMemory2KHR, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)                         \
+   EP(BindBufferMemory2KHR, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME, VK_API_VERSION_1_1,                               \
+      false) /* VK_KHR_external_fence_fd */                                                                        \
+   EP(GetFenceFdKHR, VK_KHR_EXTERNAL_FENCE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                              \
+   EP(ImportFenceFdKHR, VK_KHR_EXTERNAL_FENCE_FD_EXTENSION_NAME, API_VERSION_MAX,                                  \
+      false) /* VK_KHR_external_semaphore_fd */                                                                    \
+   EP(ImportSemaphoreFdKHR, VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, API_VERSION_MAX, false)                   \
+   EP(GetSemaphoreFdKHR, VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, API_VERSION_MAX,                             \
+      false) /* VK_KHR_image_drm_format_modifier */                                                                \
+   EP(GetImageDrmFormatModifierPropertiesEXT, VK_EXT_IMAGE_DRM_FORMAT_MODIFIER_EXTENSION_NAME, API_VERSION_MAX,    \
+      false) /* VK_KHR_sampler_ycbcr_conversion */                                                                 \
+   EP(CreateSamplerYcbcrConversionKHR, VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_API_VERSION_1_1, false)  \
+   EP(DestroySamplerYcbcrConversionKHR, VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_API_VERSION_1_1,        \
+      false) /* VK_KHR_maintenance1 */                                                                             \
+   EP(TrimCommandPoolKHR, VK_KHR_MAINTENANCE1_EXTENSION_NAME, VK_API_VERSION_1_1,                                  \
+      false) /* VK_KHR_get_memory_requirements2 */                                                                 \
+   EP(GetImageMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1, false)  \
+   EP(GetBufferMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1, false) \
+   EP(GetImageSparseMemoryRequirements2KHR, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME, VK_API_VERSION_1_1,   \
+      false)                                                                                                       \
    EP(ReleaseSwapchainImagesEXT, VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME, VK_API_VERSION_1_1, false)
 
 /**
@@ -460,6 +457,15 @@ public:
 
    DEVICE_ENTRYPOINTS_LIST(DISPATCH_TABLE_SHORTCUT)
 #undef DISPATCH_TABLE_SHORTCUT
+
+#if VULKAN_WSI_LAYER_EXPERIMENTAL
+   template <class... Args>
+   auto GetSwapchainTimeDomainPropertiesEXT(Args &&...args) const
+   {
+      return call_fn<PFN_vkGetSwapchainTimeDomainPropertiesEXT>("vkGetSwapchainTimeDomainPropertiesEXT",
+                                                                std::forward<Args>(args)...);
+   };
+#endif
 
 private:
    /**

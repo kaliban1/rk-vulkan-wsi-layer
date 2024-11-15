@@ -534,7 +534,7 @@ wsi_layer_vkGetDeviceProcAddr(VkDevice device, const char *funcName) VWL_API_POS
       GET_PROC_ADDR(vkGetSwapchainStatusKHR);
    }
 #if VULKAN_WSI_LAYER_EXPERIMENTAL
-   if (layer::device_private_data::get(device).is_device_extension_enabled(VK_KHR_PRESENT_TIMING_EXTENSION_NAME))
+   if (layer::device_private_data::get(device).is_device_extension_enabled(VK_EXT_PRESENT_TIMING_EXTENSION_NAME))
    {
       GET_PROC_ADDR(vkSetSwapchainPresentTimingQueueSizeEXT);
       GET_PROC_ADDR(vkGetSwapchainTimingPropertiesEXT);

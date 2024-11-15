@@ -220,6 +220,9 @@ swapchain_base::swapchain_base(layer::device_private_data &dev_data, const VkAll
    , m_image_compression_control_params({ VK_IMAGE_COMPRESSION_DEFAULT_EXT, 0 })
 #endif
    , m_image_create_info()
+#if VULKAN_WSI_LAYER_EXPERIMENTAL
+   , m_time_domains(m_allocator)
+#endif
    , m_image_acquire_lock()
    , m_error_state(VK_NOT_READY)
    , m_started_presenting(false)
@@ -915,6 +918,12 @@ size_t swapchain_base::presentation_timing_get_num_outstanding_results()
       }
    }
    return num_outstanding;
+}
+
+VkResult swapchain_base::set_swapchain_time_domain_properties(
+   VkSwapchainTimeDomainPropertiesEXT *pSwapchainTimeDomainProperties, uint64_t *pTimeDomainsCounter)
+{
+   return m_time_domains.set_swapchain_time_domain_properties(pSwapchainTimeDomainProperties, pTimeDomainsCounter);
 }
 #endif
 

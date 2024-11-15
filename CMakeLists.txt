@@ -275,6 +275,7 @@ add_library(${PROJECT_NAME} SHARED
    wsi/wsi_factory.cpp)
 if (VULKAN_WSI_LAYER_EXPERIMENTAL)
    target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/layer/present_timing.cpp)
+   target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/wsi/time_domains.cpp)
    add_definitions("-DVULKAN_WSI_LAYER_EXPERIMENTAL=1")
 else()
    list(APPEND JSON_COMMANDS COMMAND sed -i '/VK_EXT_present_timing/d' ${CMAKE_CURRENT_BINARY_DIR}/VkLayer_window_system_integration.json)
