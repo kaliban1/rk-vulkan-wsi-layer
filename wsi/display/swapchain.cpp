@@ -524,8 +524,9 @@ void swapchain::present_image(const pending_present_request &pending_present)
          }
          else
          {
-            assert(FD_ISSET(display->get_drm_fd(), &fds));
-
+            int result = FD_ISSET(display->get_drm_fd(), &fds);
+            assert(result > 0);
+            UNUSED(result);
             drmEventContext ev = {};
             ev.version = DRM_EVENT_CONTEXT_VERSION;
             ev.page_flip_handler = page_flip_event;
@@ -603,9 +604,9 @@ void swapchain::destroy_image(swapchain_image &image)
       }
       if (image_data->fb_id != std::numeric_limits<uint32_t>::max())
       {
-
          int result = drmModeRmFB(display->get_drm_fd(), image_data->fb_id);
          assert(result == 0);
+         UNUSED(result);
       }
 
       m_allocator.destroy(1, image_data);

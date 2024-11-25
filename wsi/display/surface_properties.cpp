@@ -332,6 +332,7 @@ GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR
       });
 
    assert(valid_mode != display->get_display_modes_end());
+   UNUSED(valid_mode);
 
    VkDisplayPlaneCapabilitiesKHR planeCapabilities{};
    planeCapabilities.supportedAlpha = VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR;
